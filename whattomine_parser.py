@@ -27,11 +27,46 @@ def fetch_data():
         logging.error(f"Ошибка при получении данных: {e}")
         return None
 
+# Функция для проверки существования данных в базе
+def is_coin_data_exists(coin_id, timestamp):
+    connection = None
+    cursor = None
+    try:
+        # Подключение к базе данных
+        logging.info("Подключение к базе данных для проверки существования данных...")
+        connection = pymysql.connect(**DB_CONFIG)
+        cursor = connection.cursor()
+
+        # SQL-запрос для проверки существования данных
+        query = """
+        SELECT COUNT(*) FROM what_to_mine_coins 
+        WHERE coin_id = %s AND timestamp = %s
+        """
+        cursor.execute(query, (coin_id, timestamp))
+        result = cursor.fetchone()
+
+        # Если результат больше 0, значит данные уже существуют
+        return result[0] > 0
+
+    except pymysql.Error as e:
+        logging.error(f"Ошибка при работе с MySQL: {e}")
+        return False
+    finally:
+        if cursor:
+            cursor.close()
+        if connection and connection.open:
+            connection.close()
+
 # Функция для записи данных в базу
 def insert_coin_data(coin_data):
     connection = None
     cursor = None
     try:
+        # Проверка, существуют ли данные для этой монеты и времени
+        if is_coin_data_exists(coin_data["id"], coin_data["timestamp"]):
+            logging.info(f"Данные для монеты {coin_data['tag']} уже существуют в базе данных")
+            return
+
         # Подключение к базе данных
         logging.info("Подключение к базе данных...")
         connection = pymysql.connect(**DB_CONFIG)
