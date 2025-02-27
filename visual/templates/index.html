@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coin Revenue Visualization</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <h1>Выберите монету для отображения графика</h1>
+
+    <!-- Форма для выбора монеты -->
+    <form method="GET" action="/">
+        <label for="coin">Монета:</label>
+        <select name="coin" id="coin">
+            {% for coin in coins %}
+                <option value="{{ coin }}" {% if coin == selected_coin %}selected{% endif %}>{{ coin }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Показать график</button>
+    </form>
+
+    <!-- График -->
+    <div id="graph"></div>
+    <script>
+        var graph = {{ graphJSON | safe }};
+        Plotly.newPlot('graph', graph);
+    </script>
+</body>
+</html>
