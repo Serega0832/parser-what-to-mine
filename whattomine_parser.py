@@ -27,8 +27,8 @@ def fetch_data():
         logging.error(f"Ошибка при получении данных: {e}")
         return None
 
-# Функция для проверки существования данных в базе
-def is_coin_data_exists(coin_id, timestamp):
+# Функция для проверки существования данных в базе за сегодня
+def is_coin_data_exists(coin_id):
     connection = None
     cursor = None
     try:
@@ -37,12 +37,12 @@ def is_coin_data_exists(coin_id, timestamp):
         connection = pymysql.connect(**DB_CONFIG)
         cursor = connection.cursor()
 
-        # SQL-запрос для проверки существования данных
+        # SQL-запрос для проверки существования данных за сегодня
         query = """
         SELECT COUNT(*) FROM what_to_mine_coins 
-        WHERE coin_id = %s AND timestamp = %s
+        WHERE coin_id = %s AND DATE(created_at) = CURDATE()
         """
-        cursor.execute(query, (coin_id, timestamp))
+        cursor.execute(query, (coin_id,))
         result = cursor.fetchone()
 
         # Если результат больше 0, значит данные уже существуют
@@ -62,9 +62,9 @@ def insert_coin_data(coin_data):
     connection = None
     cursor = None
     try:
-        # Проверка, существуют ли данные для этой монеты и времени
-        if is_coin_data_exists(coin_data["id"], coin_data["timestamp"]):
-            logging.info(f"Данные для монеты {coin_data['tag']} уже существуют в базе данных")
+        # Проверка, существуют ли данные для этой монеты за сегодня
+        if is_coin_data_exists(coin_data["id"]):
+            logging.info(f"Данные для монеты {coin_data['tag']} уже существуют в базе данных за сегодня")
             return
 
         # Подключение к базе данных
@@ -72,7 +72,7 @@ def insert_coin_data(coin_data):
         connection = pymysql.connect(**DB_CONFIG)
         cursor = connection.cursor()
 
-        # SQL-запрос для вставки данных
+        # SQL-запрос для вставки данных (без created_at, так как он добавляется автоматически)
         query = """
         INSERT INTO what_to_mine_coins (
             coin_id, tag, algorithm, block_time, block_reward, block_reward24,
