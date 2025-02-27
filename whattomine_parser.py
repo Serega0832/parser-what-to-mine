@@ -3,12 +3,19 @@ import requests
 import pymysql
 from pymysql.cursors import DictCursor
 from config import DB_CONFIG
+from logging.handlers import RotatingFileHandler  # Импортируем RotatingFileHandler
 
 # Настройка логирования (вывод в файл и в консоль)
 logging.basicConfig(
     level=logging.DEBUG,
     handlers=[
-        logging.FileHandler("whattomine.log"),  # Логи в файл
+        # Логи в файл с ограничением в 200 строк
+        RotatingFileHandler(
+            "whattomine.log",  # Имя файла
+            maxBytes=200 * 1024,  # Максимальный размер файла (200 строк * ~1 КБ на строку)
+            backupCount=1,  # Хранить только один архивный файл
+            mode="w",  # Перезаписывать файл при достижении лимита
+        ),
         logging.StreamHandler()  # Логи в консоль
     ],
     format="%(asctime)s - %(levelname)s - %(message)s"
